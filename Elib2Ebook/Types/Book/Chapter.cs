@@ -1,3 +1,4 @@
+using Elib2Ebook.Extensions;
 using System.Collections.Generic;
 
 namespace Elib2Ebook.Types.Book; 
@@ -21,7 +22,12 @@ public class Chapter {
     /// <summary>
     /// Контент части
     /// </summary>
-    public string Content { get; set; }
+    private string _content;
+    public string Content
+    {
+        get { return _content; }
+        set { _content = value.RemoveWithRegexRules(filePath: "remove_with_regex_rules_chapters.txt"); }
+    }
 
     /// <summary>
     /// Изображения из части
