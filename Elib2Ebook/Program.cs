@@ -16,11 +16,14 @@ using Elib2Ebook.Misc.TempFolder;
 namespace Elib2Ebook; 
 
 internal static class Program {
+    public static Options Options { get; private set; }
+
     private static async Task Main(string[] args) {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         await Parser.Default.ParseArguments<Options>(args)
             .WithParsedAsync(async options => {
+                Options = options;
                 var cookieContainer = new CookieContainer();
                 using var client = GetClient(options, cookieContainer);
 

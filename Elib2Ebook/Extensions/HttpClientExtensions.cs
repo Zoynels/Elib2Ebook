@@ -5,6 +5,8 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using System.IO;
+using System.Text.Json;
 
 namespace Elib2Ebook.Extensions; 
 
@@ -16,16 +18,51 @@ public static class HttpClientExtensions {
         return errorTimeout == default ? DefaultTimeout : errorTimeout;
     }
 
-    public static async Task<HttpResponseMessage> GetWithTriesAsync(this HttpClient client, Uri url, TimeSpan errorTimeout = default) {
+    public static async Task<HttpResponseMessage> GetWithTriesAsync(this HttpClient client, Uri url, TimeSpan errorTimeout = default, bool use_cache = true) {
+        // функция используется в запросах внутри этого класса
+        // в таком случае только если данная функция используется напрямую можно использовать кэш
+        // иначе кэш будет дублироваться несколько раз
+        var UseCache = Program.Options.UseCache && use_cache;
+        var saveResponse = "";
+        if (UseCache)
+        {
+            Console.WriteLine($"GetWithTriesAsync: {url.ToString()}");
+            const string directory = "Cache";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.bin";
+            if (File.Exists(saveResponse))
+            {
+                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                var cachedContent = await File.ReadAllBytesAsync(saveResponse);
+                var cachedResponse = new HttpResponseMessage(HttpStatusCode.OK);
+                cachedResponse.Content = new ByteArrayContent(cachedContent);
+                return cachedResponse;
+            }
+        }
+
         for (var i = 0; i < MAX_TRY_COUNT; i++) {
             try {
                 var response = await client.GetAsync(url);
 
+                if (UseCache)
+                {
+                    Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+                }
                 if (response.StatusCode != HttpStatusCode.OK) {
                     await Task.Delay(GetTimeout(errorTimeout));
                     continue;
                 }
 
+                if (UseCache)
+                {
+                    Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+                    var content = await response.Content.ReadAsByteArrayAsync();
+                    await File.WriteAllBytesAsync(saveResponse, content);
+                }
                 return response;
             } catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException) {
                 ProcessTimeout(client);
@@ -40,13 +77,45 @@ public static class HttpClientExtensions {
     }
 
     public static async Task<HttpResponseMessage> SendWithTriesAsync(this HttpClient client, Func<HttpRequestMessage> message, TimeSpan errorTimeout = default) {
+        var UseCache = Program.Options.UseCache;
+        var saveResponse = "";
+        if (UseCache)
+        {
+            Console.WriteLine($"SendWithTriesAsync: {message().RequestUri}");
+            const string directory = "Cache";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            saveResponse = $"{directory}/{message().RequestUri.ToString().RemoveInvalidChars()}.bin";
+            if (File.Exists(saveResponse))
+            {
+                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                var cachedContent = await File.ReadAllBytesAsync(saveResponse);
+                var cachedResponse = new HttpResponseMessage(HttpStatusCode.OK);
+                cachedResponse.Content = new ByteArrayContent(cachedContent);
+                return cachedResponse;
+            }
+        }
+
         for (var i = 0; i < MAX_TRY_COUNT; i++) {
             try { 
                 var response = await client.SendAsync(message());
 
+                if (UseCache)
+                {
+                    Console.WriteLine($"  Считываю из Интернета: {message().RequestUri}");
+                }
                 if (response.StatusCode != HttpStatusCode.OK) {
                     await Task.Delay(GetTimeout(errorTimeout));
                     continue;
+                }
+                if (UseCache)
+                {
+                    Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+                    var content = await response.Content.ReadAsByteArrayAsync();
+                    await File.WriteAllBytesAsync(saveResponse, content);
                 }
 
                 return response;
@@ -63,10 +132,36 @@ public static class HttpClientExtensions {
     }
         
     public static async Task<HttpResponseMessage> PostWithTriesAsync(this HttpClient client, Uri url, HttpContent content, TimeSpan errorTimeout = default) {
+        var UseCache = Program.Options.UseCache;
+        var saveResponse = "";
+        if (UseCache)
+        {
+            Console.WriteLine($"PostWithTriesAsync: {url.ToString()}");
+            const string directory = "Cache";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.bin";
+            if (File.Exists(saveResponse))
+            {
+                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                var cachedContent = await File.ReadAllBytesAsync(saveResponse);
+                var cachedResponse = new HttpResponseMessage(HttpStatusCode.OK);
+                cachedResponse.Content = new ByteArrayContent(cachedContent);
+                return cachedResponse;
+            }
+        }
+
         for (var i = 0; i < MAX_TRY_COUNT; i++) {
             try { 
                 var response = await client.PostAsync(url, content);
 
+                if (UseCache)
+                {
+                    Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+                }
                 if (response.StatusCode != HttpStatusCode.OK) {
                     await Task.Delay(GetTimeout(errorTimeout));
                     if (i == MAX_TRY_COUNT - 1) {
@@ -75,7 +170,13 @@ public static class HttpClientExtensions {
                         
                     continue;
                 }
-                    
+
+                if (UseCache)
+                {
+                    Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+                    var content_resp = await response.Content.ReadAsByteArrayAsync();
+                    await File.WriteAllBytesAsync(saveResponse, content_resp);
+                }
                 return response;
             } catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException) {
                 ProcessTimeout(client);
@@ -94,15 +195,107 @@ public static class HttpClientExtensions {
     }
         
     public static async Task<HtmlDocument> GetHtmlDocWithTriesAsync(this HttpClient client, Uri url, Encoding encoding = null) {
-        using var response = await client.GetWithTriesAsync(url); 
-        return await response.Content.ReadAsStreamAsync().ContinueWith(t => t.Result.AsHtmlDoc(encoding));
+        var UseCache = Program.Options.UseCache;
+        if (UseCache)
+        {
+            Console.WriteLine($"GetHtmlDocWithTriesAsync: {url.ToString()}");
+            const string directory = "Cache";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.html";
+            if (File.Exists(saveResponse))
+            {
+                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                return await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result.AsHtmlDoc());
+            }
+            Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+            using var response = await client.GetWithTriesAsync(url, use_cache: false);
+            var res_htmp = await response.Content.ReadAsStreamAsync().ContinueWith(t => t.Result.AsHtmlDoc(encoding));
+
+            Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+            await File.WriteAllTextAsync(saveResponse, res_htmp.DocumentNode.OuterHtml);
+            return res_htmp;
+        }
+        else
+        {
+            using var response = await client.GetWithTriesAsync(url, use_cache: UseCache);
+            var res_htmp = await response.Content.ReadAsStreamAsync().ContinueWith(t => t.Result.AsHtmlDoc(encoding));
+            return res_htmp;
+        }
     }
     
     public static async Task<T> GetFromJsonWithTriesAsync<T>(this HttpClient client, Uri url) {
-        using var response = await client.GetWithTriesAsync(url);
-        return await response.Content.ReadFromJsonAsync<T>();
+        var UseCache = Program.Options.UseCache;
+        if (UseCache)
+        {
+            Console.WriteLine($"GetFromJsonWithTriesAsync: {url.ToString()}");
+            const string directory = "Cache";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.json";
+            if (File.Exists(saveResponse))
+            {
+                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                var js = await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result);
+                return JsonSerializer.Deserialize<T>(js);
+            }
+
+            Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+            using var response = await client.GetWithTriesAsync(url, use_cache: false);
+            var res_js = await response.Content.ReadFromJsonAsync<T>();
+
+            Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+            await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+
+            return res_js;
+        }
+        else
+        {
+            using var response = await client.GetWithTriesAsync(url, use_cache: UseCache);
+            var res_js = await response.Content.ReadFromJsonAsync<T>();
+            return res_js;
+        } 
     }
     
+    public static async Task<T> GetFromJsonAsync<T>(this HttpClient client, Uri url) {
+        var UseCache = Program.Options.UseCache;
+        if (UseCache)
+        {
+            Console.WriteLine($"GetFromJsonAsync: {url.ToString()}");
+            const string directory = "Cache";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.json";
+            if (File.Exists(saveResponse))
+            {
+                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                var js = await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result);
+                return JsonSerializer.Deserialize<T>(js);
+            }
+            Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+            using var response = await client.GetWithTriesAsync(url, use_cache: false);
+            var res_js = await response.Content.ReadFromJsonAsync<T>();
+
+            Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+            await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+            return res_js;
+        } else
+        {
+            using var response = await client.GetWithTriesAsync(url, use_cache: UseCache);
+            var res_js = await response.Content.ReadFromJsonAsync<T>();
+            return res_js;
+        }
+    }
+
     public static async Task<HtmlDocument> PostHtmlDocWithTriesAsync(this HttpClient client, Uri url, HttpContent content, Encoding encoding = null) {
         using var response = await client.PostWithTriesAsync(url, content);
         return await response.Content.ReadAsStreamAsync().ContinueWith(t => t.Result.AsHtmlDoc(encoding));
