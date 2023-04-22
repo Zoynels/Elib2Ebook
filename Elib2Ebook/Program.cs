@@ -75,6 +75,7 @@ internal static class Program {
             "cbz" => CbzBuilder.Create(),
             "txt" => TxtBuilder.Create(),
             "json_lite" => JsonLiteBuilder.Create(),
+            "json_chapter" => JsonChapterBuilder.Create(),
             _ => throw new ArgumentException("Неизвестный формат", nameof(format))
         };
     }
