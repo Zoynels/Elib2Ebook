@@ -40,6 +40,8 @@ public class RanobeHubGetter : GetterBase {
             chapter.Images = await GetImages(chapterDoc, url);
             chapter.Content = chapterDoc.DocumentNode.InnerHtml;
             chapter.Title = ranobeChapter.Name;
+            chapter.Url = ranobeChapter.Url;
+            chapter.BookUrl = url.ToString();
 
             result.Add(chapter);
         }
