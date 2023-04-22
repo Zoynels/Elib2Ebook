@@ -43,6 +43,6 @@ public class Options {
     [Option("save-temp", Required = false, HelpText = "Сохранить ни временные файлы", Default = false)]
     public bool SaveTemp { get; set; }
     
-    [Option("use-cache", Required = false, HelpText = "Сохранить запросы на диск и использовать сохраненное как кэш", Default = false)]
-    public bool UseCache { get; set; }
+    [Option("use-cache-dir", Required = false, HelpText = "Сохранить запросы на диск и использовать сохраненное как кэш", Default = "")]
+    public string UseCacheDir { get; set; }
 }

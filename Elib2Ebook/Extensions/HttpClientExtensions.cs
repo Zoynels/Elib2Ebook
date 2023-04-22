@@ -22,12 +22,12 @@ public static class HttpClientExtensions {
         // функция используется в запросах внутри этого класса
         // в таком случае только если данная функция используется напрямую можно использовать кэш
         // иначе кэш будет дублироваться несколько раз
-        var UseCache = Program.Options.UseCache && use_cache;
-        var saveResponse = "";
+        bool UseCache = (Program.Options.UseCacheDir != "") && (use_cache);
+        string saveResponse = "";
         if (UseCache)
         {
             Console.WriteLine($"GetWithTriesAsync: {url.ToString()}");
-            const string directory = "Cache";
+            string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -77,12 +77,12 @@ public static class HttpClientExtensions {
     }
 
     public static async Task<HttpResponseMessage> SendWithTriesAsync(this HttpClient client, Func<HttpRequestMessage> message, TimeSpan errorTimeout = default) {
-        var UseCache = Program.Options.UseCache;
-        var saveResponse = "";
+        bool UseCache = Program.Options.UseCacheDir != "";
+        string saveResponse = "";
         if (UseCache)
         {
             Console.WriteLine($"SendWithTriesAsync: {message().RequestUri}");
-            const string directory = "Cache";
+            string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -132,12 +132,12 @@ public static class HttpClientExtensions {
     }
         
     public static async Task<HttpResponseMessage> PostWithTriesAsync(this HttpClient client, Uri url, HttpContent content, TimeSpan errorTimeout = default) {
-        var UseCache = Program.Options.UseCache;
-        var saveResponse = "";
+        bool UseCache = (Program.Options.UseCacheDir != "");
+        string saveResponse = "";
         if (UseCache)
         {
             Console.WriteLine($"PostWithTriesAsync: {url.ToString()}");
-            const string directory = "Cache";
+            string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -195,11 +195,11 @@ public static class HttpClientExtensions {
     }
         
     public static async Task<HtmlDocument> GetHtmlDocWithTriesAsync(this HttpClient client, Uri url, Encoding encoding = null) {
-        var UseCache = Program.Options.UseCache;
+        bool UseCache = (Program.Options.UseCacheDir != "");
         if (UseCache)
         {
             Console.WriteLine($"GetHtmlDocWithTriesAsync: {url.ToString()}");
-            const string directory = "Cache";
+            string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -228,11 +228,11 @@ public static class HttpClientExtensions {
     }
     
     public static async Task<T> GetFromJsonWithTriesAsync<T>(this HttpClient client, Uri url) {
-        var UseCache = Program.Options.UseCache;
+        bool UseCache = (Program.Options.UseCacheDir != "");
         if (UseCache)
         {
             Console.WriteLine($"GetFromJsonWithTriesAsync: {url.ToString()}");
-            const string directory = "Cache";
+            string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -264,11 +264,11 @@ public static class HttpClientExtensions {
     }
     
     public static async Task<T> GetFromJsonAsync<T>(this HttpClient client, Uri url) {
-        var UseCache = Program.Options.UseCache;
+        bool UseCache = (Program.Options.UseCacheDir != "");
         if (UseCache)
         {
             Console.WriteLine($"GetFromJsonAsync: {url.ToString()}");
-            const string directory = "Cache";
+            string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
