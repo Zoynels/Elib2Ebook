@@ -136,4 +136,17 @@ public static class StringExtensions {
         var result = sw.ToString();
         return result;
     }
+
+    public static string RemoveWithRegexRules(this string self, string filePath)
+    {
+        var rules = File.ReadAllLines(filePath);
+
+        var text = self;
+        foreach (var rule in rules)
+        {
+            text = Regex.Replace(text, rule, string.Empty);
+        }
+
+        return text;
+    }
 }
