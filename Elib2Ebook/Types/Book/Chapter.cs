@@ -4,6 +4,16 @@ namespace Elib2Ebook.Types.Book;
 
 public class Chapter {
     /// <summary>
+    /// Адрес книги
+    /// </summary>
+    public string BookUrl { get; set; }
+
+    /// <summary>
+    /// Адрес части
+    /// </summary>
+    public string Url { get; set; }
+
+    /// <summary>
     /// Название части
     /// </summary>
     public string Title { get; set; }
