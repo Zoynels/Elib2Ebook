@@ -139,35 +139,39 @@ public static class StringExtensions {
 
     public static string RemoveWithRegexRules(this string self, string filePath)
     {
-        var rules = File.ReadAllLines(filePath);
-
-        var text = self;
-        string rule = null;
-        string replace = null;
-
-        for (int i = 0; i < rules.Length; i++)
+        if (File.Exists(filePath))
         {
-            rule = null;
-            replace = string.Empty;
-            string currentRule = rules[i].Trim();
+            var rules = File.ReadAllLines(filePath);
 
-            if (currentRule.StartsWith("rule:"))
+            var text = self;
+            string rule = null;
+            string replace = null;
+
+            for (int i = 0; i < rules.Length; i++)
             {
-                rule = currentRule.Substring(5);
-                if (i < rules.Length - 1 && rules[i + 1].Trim().StartsWith("replace:"))
+                rule = null;
+                replace = string.Empty;
+                string currentRule = rules[i].Trim();
+
+                if (currentRule.StartsWith("rule:"))
                 {
-                    replace = rules[i + 1].Trim().Substring(8);
-                    i++;
+                    rule = currentRule.Substring(5);
+                    if (i < rules.Length - 1 && rules[i + 1].Trim().StartsWith("replace:"))
+                    {
+                        replace = rules[i + 1].Trim().Substring(8);
+                        i++;
+                    }
                 }
+                else
+                {
+                    continue;
+                }
+                text = Regex.Replace(text, rule, replace);
             }
-            else
-            {
-                continue;
-            }
-            text = Regex.Replace(text, rule, replace);
-
+            return text;
+        } else
+        {
+            return self;
         }
-
-        return text;
     }
 }
