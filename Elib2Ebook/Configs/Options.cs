@@ -45,4 +45,7 @@ public class Options {
     
     [Option("use-cache-dir", Required = false, HelpText = "Сохранить запросы на диск и использовать сохраненное как кэш", Default = "")]
     public string UseCacheDir { get; set; }
+
+    [Option("book-name", Required = false, HelpText = "Установить имя файла для сохранения книги, иначе имя файла будет рассчитано автоматически", Default = "")]
+    public string BookName { get; set; }
 }

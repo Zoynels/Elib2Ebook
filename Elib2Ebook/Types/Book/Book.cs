@@ -59,7 +59,11 @@ public class Book {
     /// <param name="options"></param>
     /// <param name="resourcesPath">Путь к папке с ресурсами</param>
     public async Task Save(BuilderBase builder, Options options, string resourcesPath) {
-        var title = $"{Author.Name} - {Title}".Crop(100);
+        var title = $"{Author.Name} - {Title}";
+        string book_name = Program.Options.BookName;
+        if (book_name == "") {
+            book_name = $"{Author.Name} - {Title}".Crop(100);
+        }
 
         await builder
             .AddAuthor(Author)
@@ -72,10 +76,10 @@ public class Book {
             .WithFiles(resourcesPath, "*.ttf")
             .WithFiles(resourcesPath, "*.css")
             .WithChapters(Chapters)
-            .Build(options.SavePath, title);
+            .Build(options.SavePath, book_name);
 
         if (options.Cover) {
-            await builder.SaveCover(options.SavePath, Cover, title);
+            await builder.SaveCover(options.SavePath, Cover, book_name);
         }
     }
 }
