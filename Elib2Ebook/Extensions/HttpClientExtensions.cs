@@ -20,9 +20,31 @@ public static class HttpClientExtensions {
 
     public static async Task SleepTimeout(){
         float sleepBetweenRequests = Program.Options.SleepBetweenRequests;
-        int sleepBetweenRequestsSeconds = (int)(sleepBetweenRequests * 1000);
-        Console.WriteLine($"  После запроса в интернет засыпаю на {sleepBetweenRequestsSeconds.ToString()} миллисекунд");
-        await Task.Delay(sleepBetweenRequestsSeconds);
+        int sleepBetweenRequestsMs = (int)(sleepBetweenRequests * 1000);
+        int progressBarWidth = 40; // Ширина прогресс-бара в символах
+        int iterEveryMs = 100;
+
+        for (int i = 0; i <= sleepBetweenRequestsMs / iterEveryMs; i++)
+        {
+            float progress = (float)i / (sleepBetweenRequestsMs / iterEveryMs);
+            int completedWidth = (int)(progress * progressBarWidth);
+            int remainingWidth = progressBarWidth - completedWidth;
+            double secondsRemaining = (double)(sleepBetweenRequestsMs - (i * iterEveryMs)) / 1000;
+
+            Console.Write($"  После запроса в интернет засыпаю [");;
+            Console.Write(new string('#', completedWidth));
+            Console.Write(new string('-', remainingWidth));
+            Console.Write($"] {progress * 100:F0}% ({secondsRemaining:F1} сек)");
+
+            if (i < sleepBetweenRequestsMs / iterEveryMs)
+            {
+                Console.SetCursorPosition(0, Console.CursorTop);
+            }
+
+            await Task.Delay(iterEveryMs);
+        }
+
+        Console.WriteLine($"; Готово");
     }
 
     public static async Task<HttpResponseMessage> GetWithTriesAsync(this HttpClient client, Uri url, TimeSpan errorTimeout = default, bool use_cache = true) {
