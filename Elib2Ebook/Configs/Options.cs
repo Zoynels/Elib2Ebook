@@ -48,4 +48,7 @@ public class Options {
 
     [Option("book-name", Required = false, HelpText = "Установить имя файла для сохранения книги, иначе имя файла будет рассчитано автоматически", Default = "")]
     public string BookName { get; set; }
+
+    [Option("sleep-between-requests", Required = false, HelpText = "Timeout в секундах между запросами в интернет", Default = 0)]
+    public float SleepBetweenRequests { get; set; }
 }

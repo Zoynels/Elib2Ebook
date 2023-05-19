@@ -18,6 +18,13 @@ public static class HttpClientExtensions {
         return errorTimeout == default ? DefaultTimeout : errorTimeout;
     }
 
+    public static async Task SleepTimeout(){
+        float sleepBetweenRequests = Program.Options.SleepBetweenRequests;
+        int sleepBetweenRequestsSeconds = (int)(sleepBetweenRequests * 1000);
+        Console.WriteLine($"  После запроса в интернет засыпаю на {sleepBetweenRequestsSeconds.ToString()} миллисекунд");
+        await Task.Delay(sleepBetweenRequestsSeconds);
+    }
+
     public static async Task<HttpResponseMessage> GetWithTriesAsync(this HttpClient client, Uri url, TimeSpan errorTimeout = default, bool use_cache = true) {
         // функция используется в запросах внутри этого класса
         // в таком случае только если данная функция используется напрямую можно использовать кэш
@@ -63,6 +70,7 @@ public static class HttpClientExtensions {
                     var content = await response.Content.ReadAsByteArrayAsync();
                     await File.WriteAllBytesAsync(saveResponse, content);
                 }
+                await SleepTimeout();
                 return response;
             } catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException) {
                 ProcessTimeout(client);
@@ -71,6 +79,7 @@ public static class HttpClientExtensions {
                 Console.WriteLine(ex.Message);
                 await Task.Delay(GetTimeout(errorTimeout));
             }
+            await SleepTimeout();
         }
 
         return default;
@@ -118,6 +127,7 @@ public static class HttpClientExtensions {
                     await File.WriteAllBytesAsync(saveResponse, content);
                 }
 
+                await SleepTimeout();
                 return response;
             } catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException) {
                 ProcessTimeout(client);
@@ -126,6 +136,7 @@ public static class HttpClientExtensions {
                 Console.WriteLine(ex.Message);
                 await Task.Delay(GetTimeout(errorTimeout));
             }
+            await SleepTimeout();
         }
 
         return default;
@@ -177,6 +188,7 @@ public static class HttpClientExtensions {
                     var content_resp = await response.Content.ReadAsByteArrayAsync();
                     await File.WriteAllBytesAsync(saveResponse, content_resp);
                 }
+                await SleepTimeout();
                 return response;
             } catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException) {
                 ProcessTimeout(client);
@@ -185,6 +197,7 @@ public static class HttpClientExtensions {
                 Console.WriteLine(ex.Message);
                 await Task.Delay(GetTimeout(errorTimeout));
             }
+            await SleepTimeout();
         }
 
         return default;
