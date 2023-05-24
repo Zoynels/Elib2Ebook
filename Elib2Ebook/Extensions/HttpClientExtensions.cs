@@ -18,54 +18,58 @@ public static class HttpClientExtensions {
         return errorTimeout == default ? DefaultTimeout : errorTimeout;
     }
 
-    public static async Task SleepTimeout(){
+    public static async Task SleepTimeout()
+    {
         float sleepBetweenRequests = Program.Options.SleepBetweenRequests;
-        int sleepBetweenRequestsMs = (int)(sleepBetweenRequests * 1000);
-        int progressBarWidth = 40; // Ширина прогресс-бара в символах
-        int iterEveryMs = 100;
-
-        for (int i = 0; i <= sleepBetweenRequestsMs / iterEveryMs; i++)
+        if (sleepBetweenRequests > 0)
         {
-            float progress = (float)i / (sleepBetweenRequestsMs / iterEveryMs);
-            int completedWidth = (int)(progress * progressBarWidth);
-            int remainingWidth = progressBarWidth - completedWidth;
-            double secondsRemaining = (double)(sleepBetweenRequestsMs - (i * iterEveryMs)) / 1000;
+            int sleepBetweenRequestsMs = (int)(sleepBetweenRequests * 1000);
+            int progressBarWidth = 40; // Ширина прогресс-бара в символах
+            int iterEveryMs = 100;
 
-            Console.Write($"  После запроса в интернет засыпаю [");;
-            Console.Write(new string('#', completedWidth));
-            Console.Write(new string('-', remainingWidth));
-            Console.Write($"] {progress * 100:F0}% ({secondsRemaining:F1} сек)");
-
-            if (i < sleepBetweenRequestsMs / iterEveryMs)
+            for (int i = 0; i <= sleepBetweenRequestsMs / iterEveryMs; i++)
             {
-                Console.SetCursorPosition(0, Console.CursorTop);
+                float progress = (float)i / (sleepBetweenRequestsMs / iterEveryMs);
+                int completedWidth = (int)(progress * progressBarWidth);
+                int remainingWidth = progressBarWidth - completedWidth;
+                double secondsRemaining = (double)(sleepBetweenRequestsMs - (i * iterEveryMs)) / 1000;
+
+                Console.Write($"    После запроса в интернет засыпаю ["); ;
+                Console.Write(new string('#', completedWidth));
+                Console.Write(new string('-', remainingWidth));
+                Console.Write($"] {progress * 100:F0}% ({secondsRemaining:F1} сек)");
+
+                if (i < sleepBetweenRequestsMs / iterEveryMs)
+                {
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                }
+
+                await Task.Delay(iterEveryMs);
             }
 
-            await Task.Delay(iterEveryMs);
+            Console.WriteLine($"; Готово");
         }
-
-        Console.WriteLine($"; Готово");
     }
 
-    public static async Task<HttpResponseMessage> GetWithTriesAsync(this HttpClient client, Uri url, TimeSpan errorTimeout = default, bool use_cache = true) {
+        public static async Task<HttpResponseMessage> GetWithTriesAsync(this HttpClient client, Uri url, TimeSpan errorTimeout = default, bool use_cache = true) {
         // функция используется в запросах внутри этого класса
         // в таком случае только если данная функция используется напрямую можно использовать кэш
         // иначе кэш будет дублироваться несколько раз
         bool UseCache = (Program.Options.UseCacheDir != "") && (use_cache);
         string saveResponse = "";
+        string prefix = "";
+        if (Program.Options.debug_add_function_prefix)
+        {
+            prefix = "GetWithTriesAsync:         ";
+        }
+
         if (UseCache)
         {
-            Console.WriteLine($"GetWithTriesAsync: {url.ToString()}");
             string directory = Program.Options.UseCacheDir;
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.bin";
+            saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.bin";
             if (File.Exists(saveResponse))
             {
-                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var cachedContent = await File.ReadAllBytesAsync(saveResponse);
                 var cachedResponse = new HttpResponseMessage(HttpStatusCode.OK);
                 cachedResponse.Content = new ByteArrayContent(cachedContent);
@@ -79,7 +83,7 @@ public static class HttpClientExtensions {
 
                 if (UseCache)
                 {
-                    Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+                    Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
                 }
                 if (response.StatusCode != HttpStatusCode.OK) {
                     await Task.Delay(GetTimeout(errorTimeout));
@@ -88,7 +92,8 @@ public static class HttpClientExtensions {
 
                 if (UseCache)
                 {
-                    Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+                    Console.WriteLine($"{prefix}   Сохраняю файл на диск: {saveResponse}");
+                    saveResponse.Makedirs();
                     var content = await response.Content.ReadAsByteArrayAsync();
                     await File.WriteAllBytesAsync(saveResponse, content);
                 }
@@ -110,19 +115,24 @@ public static class HttpClientExtensions {
     public static async Task<HttpResponseMessage> SendWithTriesAsync(this HttpClient client, Func<HttpRequestMessage> message, TimeSpan errorTimeout = default) {
         bool UseCache = Program.Options.UseCacheDir != "";
         string saveResponse = "";
+        string prefix = "";
+        if (Program.Options.debug_add_function_prefix)
+        {
+            prefix = "SendWithTriesAsync:        ";
+        }
+
         if (UseCache)
         {
-            Console.WriteLine($"SendWithTriesAsync: {message().RequestUri}");
             string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            saveResponse = $"{directory}/{message().RequestUri.ToString().RemoveInvalidChars()}.bin";
+            saveResponse = $"{directory}/{message().RequestUri.ToString().RemoveInvalidCharsPath()}.bin";
             if (File.Exists(saveResponse))
             {
-                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var cachedContent = await File.ReadAllBytesAsync(saveResponse);
                 var cachedResponse = new HttpResponseMessage(HttpStatusCode.OK);
                 cachedResponse.Content = new ByteArrayContent(cachedContent);
@@ -136,7 +146,7 @@ public static class HttpClientExtensions {
 
                 if (UseCache)
                 {
-                    Console.WriteLine($"  Считываю из Интернета: {message().RequestUri}");
+                    Console.WriteLine($"{prefix}    Считываю из Интернета: {message().RequestUri}");
                 }
                 if (response.StatusCode != HttpStatusCode.OK) {
                     await Task.Delay(GetTimeout(errorTimeout));
@@ -144,7 +154,8 @@ public static class HttpClientExtensions {
                 }
                 if (UseCache)
                 {
-                    Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+                    Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
+                    saveResponse.Makedirs();
                     var content = await response.Content.ReadAsByteArrayAsync();
                     await File.WriteAllBytesAsync(saveResponse, content);
                 }
@@ -167,19 +178,24 @@ public static class HttpClientExtensions {
     public static async Task<HttpResponseMessage> PostWithTriesAsync(this HttpClient client, Uri url, HttpContent content, TimeSpan errorTimeout = default) {
         bool UseCache = (Program.Options.UseCacheDir != "");
         string saveResponse = "";
+        string prefix = "";
+        if (Program.Options.debug_add_function_prefix)
+        {
+            prefix = "PostWithTriesAsync:        ";
+        }
+
         if (UseCache)
         {
-            Console.WriteLine($"PostWithTriesAsync: {url.ToString()}");
             string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.bin";
+            saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.bin";
             if (File.Exists(saveResponse))
             {
-                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var cachedContent = await File.ReadAllBytesAsync(saveResponse);
                 var cachedResponse = new HttpResponseMessage(HttpStatusCode.OK);
                 cachedResponse.Content = new ByteArrayContent(cachedContent);
@@ -193,7 +209,7 @@ public static class HttpClientExtensions {
 
                 if (UseCache)
                 {
-                    Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+                    Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
                 }
                 if (response.StatusCode != HttpStatusCode.OK) {
                     await Task.Delay(GetTimeout(errorTimeout));
@@ -206,7 +222,8 @@ public static class HttpClientExtensions {
 
                 if (UseCache)
                 {
-                    Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+                    Console.WriteLine($"{prefix}   Сохраняю файл на диск: {saveResponse}");
+                    saveResponse.Makedirs();
                     var content_resp = await response.Content.ReadAsByteArrayAsync();
                     await File.WriteAllBytesAsync(saveResponse, content_resp);
                 }
@@ -231,26 +248,32 @@ public static class HttpClientExtensions {
         
     public static async Task<HtmlDocument> GetHtmlDocWithTriesAsync(this HttpClient client, Uri url, Encoding encoding = null) {
         bool UseCache = (Program.Options.UseCacheDir != "");
+        string prefix = "";
+        if (Program.Options.debug_add_function_prefix)
+        {
+            prefix = "GetHtmlDocWithTriesAsync:  ";
+        }
+
         if (UseCache)
         {
-            Console.WriteLine($"GetHtmlDocWithTriesAsync: {url.ToString()}");
             string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.html";
+            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.html";
             if (File.Exists(saveResponse))
             {
-                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 return await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result.AsHtmlDoc());
             }
-            Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+            Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
             using var response = await client.GetWithTriesAsync(url, use_cache: false);
             var res_htmp = await response.Content.ReadAsStreamAsync().ContinueWith(t => t.Result.AsHtmlDoc(encoding));
 
-            Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
+            saveResponse.Makedirs();
             await File.WriteAllTextAsync(saveResponse, res_htmp.DocumentNode.OuterHtml);
             return res_htmp;
         }
@@ -264,28 +287,34 @@ public static class HttpClientExtensions {
     
     public static async Task<T> GetFromJsonWithTriesAsync<T>(this HttpClient client, Uri url) {
         bool UseCache = (Program.Options.UseCacheDir != "");
+        string prefix = "";
+        if (Program.Options.debug_add_function_prefix)
+        {
+            prefix = "GetFromJsonWithTriesAsync: ";
+        }
+
         if (UseCache)
         {
-            Console.WriteLine($"GetFromJsonWithTriesAsync: {url.ToString()}");
             string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.json";
+            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.json";
             if (File.Exists(saveResponse))
             {
-                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var js = await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result);
                 return JsonSerializer.Deserialize<T>(js);
             }
 
-            Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+            Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
             using var response = await client.GetWithTriesAsync(url, use_cache: false);
             var res_js = await response.Content.ReadFromJsonAsync<T>();
 
-            Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
+            saveResponse.Makedirs();
             await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
 
             return res_js;
@@ -300,30 +329,38 @@ public static class HttpClientExtensions {
     
     public static async Task<T> GetFromJsonAsync<T>(this HttpClient client, Uri url) {
         bool UseCache = (Program.Options.UseCacheDir != "");
+        string prefix = "";
+        if (Program.Options.debug_add_function_prefix)
+        {
+            prefix = "GetFromJsonAsync:          ";
+        }
+
         if (UseCache)
         {
-            Console.WriteLine($"GetFromJsonAsync: {url.ToString()}");
             string directory = Program.Options.UseCacheDir;
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
-            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidChars()}.json";
+            var saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.json";
             if (File.Exists(saveResponse))
             {
-                Console.WriteLine($"  Считываю из CACHE:     {saveResponse}");
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var js = await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result);
                 return JsonSerializer.Deserialize<T>(js);
             }
-            Console.WriteLine($"  Считываю из Интернета: {url.ToString()}");
+            Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
             using var response = await client.GetWithTriesAsync(url, use_cache: false);
             var res_js = await response.Content.ReadFromJsonAsync<T>();
 
-            Console.WriteLine($"  Сохраняю файл на диск: {saveResponse}");
+            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
+            saveResponse.Makedirs();
             await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+
             return res_js;
-        } else
+        } 
+        else
         {
             using var response = await client.GetWithTriesAsync(url, use_cache: UseCache);
             var res_js = await response.Content.ReadFromJsonAsync<T>();
