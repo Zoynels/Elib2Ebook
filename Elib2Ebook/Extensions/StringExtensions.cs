@@ -12,6 +12,16 @@ using HtmlAgilityPack;
 namespace Elib2Ebook.Extensions; 
 
 public static class StringExtensions {
+
+    public static void Makedirs(this string self)
+    {
+        string directory = Path.GetDirectoryName(self);
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
     /// <summary>
     /// Конвертация строки в Html документ
     /// </summary>
