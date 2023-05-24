@@ -57,9 +57,41 @@ public static class StringExtensions {
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    public static string RemoveInvalidChars(this string self) {
+    public static string RemoveInvalidCharsPath(this string self)
+    {
+        self = self.Replace("http://", "");
+        self = self.Replace("https://", "");
+        self = self.Replace("ftp://", "");
+        self = self.Replace("ftps://", "");
+        self = self.Replace("\\", "/");
+
         var sb = new StringBuilder(self);
-        foreach (var invalidFileNameChar in Path.GetInvalidFileNameChars().Union(new[]{'"'})) {
+
+        foreach (var invalidFileNameChar in Path.GetInvalidFileNameChars().Union(new[] { '"' }))
+        {
+            if (invalidFileNameChar == '/')
+            {
+                // pass
+            }
+            else
+            {
+                sb.Replace(invalidFileNameChar, ' ');
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Удаление из строки запрещенных символов для пути
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    public static string RemoveInvalidChars(this string self)
+    {
+        var sb = new StringBuilder(self);
+        foreach (var invalidFileNameChar in Path.GetInvalidFileNameChars().Union(new[] { '"' }))
+        {
             sb.Replace(invalidFileNameChar, ' ');
         }
 
