@@ -103,11 +103,18 @@ public abstract class BuilderBase
             fileName = Path.Combine(directory, fileName);
         }
         
-        Console.WriteLine($"Начинаю сохранение книги {fileName.CoverQuotes()}");
-            
-        await BuildInternal(fileName);
+        Console.WriteLine($"Начинаю сохранение книги:  {fileName.CoverQuotes()}");
 
-        Console.WriteLine($"Книга {fileName.CoverQuotes()} успешно сохранена");
+        if (this.ToString() == "Elib2Ebook.Logic.Builders.JsonChapterBuilder")
+        {
+            await BuildInternal(directory);
+        }
+        else
+        {
+            await BuildInternal(fileName);
+        }
+
+        Console.WriteLine($"Книга успешно сохранена:   {fileName.CoverQuotes()}");
     }
 
     /// <summary>
