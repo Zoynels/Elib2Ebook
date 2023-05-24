@@ -74,12 +74,16 @@ public class JsonChapterBuilder : BuilderBase {
             if (chapter.Url is null)
             {
                 chapter_url = $"cnt={cnt.ToString()}";
-            } else
-            {
-                chapter_url = $"url={chapter.Url.ToString()}";
+                fname = $"{name} [{chapter_url.RemoveInvalidChars()}].json";
             }
-            fname = $"{name} [{chapter_url.RemoveInvalidChars()}].json";
-            Console.WriteLine($"Создается файл для главы: {fname}");
+            else
+            {
+                chapter_url = $"{chapter.Url.ToString()}";
+                fname = $"{name}/{chapter_url.RemoveInvalidCharsPath()}.json";
+            }
+            
+            Console.WriteLine($"Создается файл для главы:  {fname}");
+            fname.Makedirs();
             await using var file = File.Create(fname);
             await JsonSerializer.SerializeAsync(file, chapter, jsonSerializerOptions);
         }
