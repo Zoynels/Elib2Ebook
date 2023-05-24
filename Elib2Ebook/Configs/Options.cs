@@ -51,4 +51,7 @@ public class Options {
 
     [Option("sleep-between-requests", Required = false, HelpText = "Timeout в секундах между запросами в интернет", Default = 0)]
     public float SleepBetweenRequests { get; set; }
+
+    [Option("debug-add-function-prefix", Required = false, HelpText = "Добавлять название функции в логи", Default = false)]
+    public bool debug_add_function_prefix { get; set; }
 }
