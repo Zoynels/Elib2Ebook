@@ -53,17 +53,29 @@ public static class StringExtensions {
     }
 
     /// <summary>
-    /// Удаление из строки запрещенных символов для пути
+    /// Удаление из строки названий протоколов
     /// </summary>
     /// <param name="self"></param>
     /// <returns></returns>
-    public static string RemoveInvalidCharsPath(this string self)
+    public static string RemoveInvalidCharsProtocol(this string self)
     {
         self = self.Replace("http://", "");
         self = self.Replace("https://", "");
         self = self.Replace("ftp://", "");
         self = self.Replace("ftps://", "");
         self = self.Replace("\\", "/");
+
+        return self;
+    }
+
+    /// <summary>
+    /// Удаление из строки запрещенных символов для пути
+    /// </summary>
+    /// <param name="self"></param>
+    /// <returns></returns>
+    public static string RemoveInvalidCharsPath(this string self)
+    {
+        self = self.RemoveInvalidCharsProtocol();
 
         var sb = new StringBuilder(self);
 
