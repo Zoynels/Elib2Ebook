@@ -54,4 +54,8 @@ public class Options {
 
     [Option("debug-add-function-prefix", Required = false, HelpText = "Добавлять название функции в логи", Default = false)]
     public bool DebugAddFunctionPrefix { get; set; }
+
+    public int BookChapterCount { get; set; }
+    public int BookChapterStart { get; set; }
+    public int BookChapterEnd { get; set; }
 }

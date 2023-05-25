@@ -116,24 +116,40 @@ public abstract class GetterBase : IDisposable {
     protected IEnumerable<T> SliceToc<T>(ICollection<T> toc) {
         var start = Config.Options.Start;
         var end = Config.Options.End;
+        Config.Options.BookChapterCount = toc.Count;
 
         if (start.HasValue && end.HasValue) {
             var startIndex = start.Value >= 0 ? start.Value : toc.Count + start.Value + 1; 
-            var endIndex = end.Value >= 0 ? end.Value : toc.Count + end.Value; 
-            
+            var endIndex = end.Value >= 0 ? end.Value : toc.Count + end.Value;
+
+            Config.Options.BookChapterStart = startIndex;
+            Config.Options.BookChapterEnd = endIndex >= toc.Count ? toc.Count : endIndex;
+
             return toc.Skip(startIndex - 1).Take(endIndex - startIndex + 1);
         }
         
         if (start.HasValue) {
-            var startIndex = start.Value >= 0 ? start.Value : toc.Count + start.Value + 1; 
+            var startIndex = start.Value >= 0 ? start.Value : toc.Count + start.Value + 1;
+
+            Config.Options.BookChapterStart = startIndex;
+            Config.Options.BookChapterEnd = toc.Count;
+
             return toc.Skip(startIndex - 1);
         }
         
         if (end.HasValue) {
-            var endIndex = end.Value >= 0 ? end.Value : toc.Count + end.Value; 
+            var endIndex = end.Value >= 0 ? end.Value : toc.Count + end.Value;
+
+            Config.Options.BookChapterStart = toc.Count + end.Value;
+            Config.Options.BookChapterEnd = toc.Count;
+
             return toc.Take(endIndex);
         }
-        
+
+        Config.Options.BookChapterStart = 1;
+        Config.Options.BookChapterEnd = toc.Count;
+        if (Config.Options.BookChapterEnd == 0) { Config.Options.BookChapterEnd = 1; }
+
         return toc;
     }
 
