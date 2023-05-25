@@ -58,7 +58,7 @@ public static class HttpClientExtensions {
         bool UseCache = (Program.Options.UseCacheDir != "") && (use_cache);
         string saveResponse = "";
         string prefix = "";
-        if (Program.Options.debug_add_function_prefix)
+        if (Program.Options.DebugAddFunctionPrefix)
         {
             prefix = "GetWithTriesAsync:         ";
         }
@@ -116,7 +116,7 @@ public static class HttpClientExtensions {
         bool UseCache = Program.Options.UseCacheDir != "";
         string saveResponse = "";
         string prefix = "";
-        if (Program.Options.debug_add_function_prefix)
+        if (Program.Options.DebugAddFunctionPrefix)
         {
             prefix = "SendWithTriesAsync:        ";
         }
@@ -179,7 +179,7 @@ public static class HttpClientExtensions {
         bool UseCache = (Program.Options.UseCacheDir != "");
         string saveResponse = "";
         string prefix = "";
-        if (Program.Options.debug_add_function_prefix)
+        if (Program.Options.DebugAddFunctionPrefix)
         {
             prefix = "PostWithTriesAsync:        ";
         }
@@ -249,7 +249,7 @@ public static class HttpClientExtensions {
     public static async Task<HtmlDocument> GetHtmlDocWithTriesAsync(this HttpClient client, Uri url, Encoding encoding = null) {
         bool UseCache = (Program.Options.UseCacheDir != "");
         string prefix = "";
-        if (Program.Options.debug_add_function_prefix)
+        if (Program.Options.DebugAddFunctionPrefix)
         {
             prefix = "GetHtmlDocWithTriesAsync:  ";
         }
@@ -288,7 +288,7 @@ public static class HttpClientExtensions {
     public static async Task<T> GetFromJsonWithTriesAsync<T>(this HttpClient client, Uri url) {
         bool UseCache = (Program.Options.UseCacheDir != "");
         string prefix = "";
-        if (Program.Options.debug_add_function_prefix)
+        if (Program.Options.DebugAddFunctionPrefix)
         {
             prefix = "GetFromJsonWithTriesAsync: ";
         }
@@ -330,7 +330,7 @@ public static class HttpClientExtensions {
     public static async Task<T> GetFromJsonAsync<T>(this HttpClient client, Uri url) {
         bool UseCache = (Program.Options.UseCacheDir != "");
         string prefix = "";
-        if (Program.Options.debug_add_function_prefix)
+        if (Program.Options.DebugAddFunctionPrefix)
         {
             prefix = "GetFromJsonAsync:          ";
         }

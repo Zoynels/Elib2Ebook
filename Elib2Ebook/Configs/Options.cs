@@ -53,5 +53,5 @@ public class Options {
     public float SleepBetweenRequests { get; set; }
 
     [Option("debug-add-function-prefix", Required = false, HelpText = "Добавлять название функции в логи", Default = false)]
-    public bool debug_add_function_prefix { get; set; }
+    public bool DebugAddFunctionPrefix { get; set; }
 }
