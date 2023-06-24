@@ -331,7 +331,9 @@ public static class HttpClientExtensions {
             saveResponse.Makedirs();
             //await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
             Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponseGZip}");
-            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, JsonSerializer.Serialize<T>(res_js));
+            //await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, JsonSerializer.Serialize<T>(res_js));
+            string content = await response.Content.ReadAsStringAsync();
+            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, content);
 
             return res_js;
         }
@@ -379,7 +381,9 @@ public static class HttpClientExtensions {
             saveResponse.Makedirs();
             //await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
             Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponseGZip}");
-            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, JsonSerializer.Serialize<T>(res_js));
+            //await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, JsonSerializer.Serialize<T>(res_js));
+            string content = await response.Content.ReadAsStringAsync();
+            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, content);
 
             return res_js;
         } 
