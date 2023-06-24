@@ -263,18 +263,26 @@ public static class HttpClientExtensions {
             }
 
             var saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.html";
+            var saveResponseGZip = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.html.gz";
             if (File.Exists(saveResponse))
             {
                 Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 return await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result.AsHtmlDoc());
             }
+            else if (File.Exists(saveResponseGZip))
+            {
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponseGZip}");
+                var html = FileProviderExtensions.ReadTextFromGzipFile(saveResponseGZip).AsHtmlDoc();
+                return html;
+            }
             Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
             using var response = await client.GetWithTriesAsync(url, use_cache: false);
             var res_htmp = await response.Content.ReadAsStreamAsync().ContinueWith(t => t.Result.AsHtmlDoc(encoding));
 
-            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
             saveResponse.Makedirs();
-            await File.WriteAllTextAsync(saveResponse, res_htmp.DocumentNode.OuterHtml);
+            //await File.WriteAllTextAsync(saveResponse, res_htmp.DocumentNode.OuterHtml);
+            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponseGZip}");
+            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, res_htmp.DocumentNode.OuterHtml);
             return res_htmp;
         }
         else
@@ -302,10 +310,17 @@ public static class HttpClientExtensions {
             }
 
             var saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.json";
+            var saveResponseGZip = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.json.gz";
             if (File.Exists(saveResponse))
             {
                 Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var js = await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result);
+                return JsonSerializer.Deserialize<T>(js);
+            }
+            else if (File.Exists(saveResponseGZip))
+            {
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponseGZip}");
+                var js = FileProviderExtensions.ReadTextFromGzipFile(saveResponseGZip);
                 return JsonSerializer.Deserialize<T>(js);
             }
 
@@ -313,9 +328,10 @@ public static class HttpClientExtensions {
             using var response = await client.GetWithTriesAsync(url, use_cache: false);
             var res_js = await response.Content.ReadFromJsonAsync<T>();
 
-            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
             saveResponse.Makedirs();
-            await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+            //await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponseGZip}");
+            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, JsonSerializer.Serialize<T>(res_js));
 
             return res_js;
         }
@@ -344,19 +360,26 @@ public static class HttpClientExtensions {
             }
 
             var saveResponse = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.json";
+            var saveResponseGZip = $"{directory}/{url.ToString().RemoveInvalidCharsPath()}.json.gz";
             if (File.Exists(saveResponse))
             {
                 Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponse}");
                 var js = await File.ReadAllTextAsync(saveResponse).ContinueWith(t => t.Result);
+                return JsonSerializer.Deserialize<T>(js);
+            } else if (File.Exists(saveResponseGZip))
+            {
+                Console.WriteLine($"{prefix}    Считываю из CACHE:     {saveResponseGZip}");
+                var js = FileProviderExtensions.ReadTextFromGzipFile(saveResponseGZip);
                 return JsonSerializer.Deserialize<T>(js);
             }
             Console.WriteLine($"{prefix}    Считываю из Интернета: {url.ToString()}");
             using var response = await client.GetWithTriesAsync(url, use_cache: false);
             var res_js = await response.Content.ReadFromJsonAsync<T>();
 
-            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponse}");
             saveResponse.Makedirs();
-            await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+            //await File.WriteAllTextAsync(saveResponse, JsonSerializer.Serialize<T>(res_js));
+            Console.WriteLine($"{prefix}    Сохраняю файл на диск: {saveResponseGZip}");
+            await FileProviderExtensions.WriteTextToGzipFileAsync(saveResponseGZip, JsonSerializer.Serialize<T>(res_js));
 
             return res_js;
         } 
